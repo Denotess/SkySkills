@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto" x-data="{ showInfo: false }">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h2 class="text-4xl font-bold text-gray-900 mb-3">
+            Fishing Optimizer
+        </h2>
+        <p class="text-lg text-gray-600">
+            Get personalized, dynamic recommendations based on your Hypixel Skyblock profile
+        </p>
+    </div>
+
+    <!-- Input Card -->
+    <div class="bg-white shadow-xl rounded-lg p-8 mb-6">
+        <h3 class="text-2xl font-semibold mb-4 text-gray-800">Enter Your IGN</h3>
+        <form class="space-y-4" hx-post="/fishing/lookup" hx-target="#results" hx-indicator="#loading">
+            <div>
+                <label for="ign" class="block text-sm font-medium text-gray-700 mb-2">
+                    Minecraft Username
+                </label>
+                <input 
+                    type="text" 
+                    id="ign"
+                    name="ign" 
+                    placeholder="YourMinecraftName" 
+                    required
+                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+            </div>
+            
+            <div>
+                <label for="api_key" class="block text-sm font-medium text-gray-700 mb-2">
+                    Hypixel API Key <span class="text-gray-500 text-xs">(optional, for detailed stats)</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="api_key"
+                    name="api_key" 
+                    placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
+                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+            </div>
+            
+            <button 
+                type="submit" 
+                class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition shadow-md"
+            >
+                Get Recommendations
+            </button>
+            
+            <!-- Loading Indicator -->
+            <div id="loading" class="htmx-indicator text-center py-4">
+                <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="text-sm text-gray-600 mt-2">Fetching your profile...</p>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Area -->
+    <div id="results" class="space-y-4">
+        <!-- HTMX will inject content here -->
+    </div>
+
+    <!-- Status Card -->
+    <div class="mt-8 bg-blue-50 border-l-4 border-blue-600 p-5 rounded-r-lg">
+        <div class="flex items-start">
+            <svg class="w-6 h-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+            </svg>
+            <div>
+                <p class="font-semibold text-blue-900">Development Status: Fishing v0</p>
+                <ul class="text-sm text-blue-800 mt-2 space-y-1">
+                    <li>✅ Models & Database</li>
+                    <li>✅ Calculators (SCC, FS)</li>
+                    <li>✅ Unit Tests Passing</li>
+                    <li>⏳ API Client (next milestone)</li>
+                    <li>⏳ Recommendation Engine</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .htmx-indicator {
+        display: none;
+    }
+    .htmx-request .htmx-indicator {
+        display: block;
+    }
+    .htmx-request button {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+</style>
+{% endblock %}

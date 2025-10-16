@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Skyskills - Hypixel Skyblock Fishing Optimizer{% endblock %}</title>
+    
+    <!-- Tailwind CSS via CDN (dev only, will swap to CLI later) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+    <nav class="bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 12H1v6a2 2 0 002 2h14a2 2 0 002-2v-6h-8v2H9v-2z"/>
+                    <path d="M0 10h20L10 0 0 10z"/>
+                </svg>
+                <h1 class="text-2xl font-bold">Skyskills</h1>
+            </div>
+            <div class="space-x-6">
+                <a href="/" class="hover:text-blue-200 transition">Home</a>
+                <a href="/admin/" class="hover:text-blue-200 transition">Admin</a>
+            </div>
+        </div>
+    </nav>
+    
+    <main class="container mx-auto px-4 py-8 flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer class="bg-gray-800 text-white text-center py-6 mt-12">
+        <p class="text-sm">&copy; 2025 Skyskills | Hypixel Skyblock Fishing Optimizer</p>
+        <p class="text-xs text-gray-400 mt-1">Built with Django + HTMX + Alpine.js + Tailwind CSS</p>
+    </footer>
+</body>
+</html>

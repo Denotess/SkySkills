@@ -2,4 +2,11 @@
 .env
 pycache
 db.sqlite
-LEARNING.md
+LEARNING.md.env
+*.pyc
+__pycache__/
+db.sqlite3
+staticfiles/
+.pytest_cache/
+.coverage
+htmlcov/
