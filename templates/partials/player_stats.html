@@ -1,0 +1,66 @@
+<div class="space-y-6">
+    <!-- Success Banner -->
+    <div class="bg-green-50 border-l-4 border-green-500 p-6 rounded-r-lg shadow-md">
+        <div class="flex items-start">
+            <svg class="w-6 h-6 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <div>
+                <h3 class="text-lg font-semibold text-green-900">Profile Found!</h3>
+                <p class="text-green-700 mt-1">
+                    <span class="font-bold">{{ stats.ign }}</span> on profile 
+                    <span class="font-mono bg-green-100 px-2 py-1 rounded">{{ stats.profile_name }}</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fishing Stats Card -->
+    <div class="bg-white shadow-xl rounded-lg p-8">
+        <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+            <svg class="w-8 h-8 mr-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"/>
+                <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"/>
+            </svg>
+            Fishing Stats
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Fishing Level -->
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg">
+                <div class="text-sm font-medium text-blue-600 mb-2">Fishing Level</div>
+                <div class="text-4xl font-bold text-blue-900">{{ stats.fishing_level }}</div>
+                <div class="text-xs text-blue-700 mt-2">{{ stats.fishing_xp|floatformat:0 }} XP</div>
+            </div>
+            
+            <!-- Trophy Fish -->
+            <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-lg">
+                <div class="text-sm font-medium text-yellow-600 mb-2">Trophy Fish</div>
+                <div class="text-4xl font-bold text-yellow-900">{{ stats.trophy_fish|length }}</div>
+                <div class="text-xs text-yellow-700 mt-2">Unique types caught</div>
+            </div>
+            
+            <!-- Sea Creatures -->
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg">
+                <div class="text-sm font-medium text-purple-600 mb-2">Sea Creatures</div>
+                <div class="text-4xl font-bold text-purple-900">{{ stats.sea_creature_kills|length }}</div>
+                <div class="text-xs text-purple-700 mt-2">Types killed</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommendations Placeholder -->
+    <div class="bg-blue-50 border-l-4 border-blue-600 p-6 rounded-r-lg">
+        <div class="flex items-start">
+            <svg class="w-6 h-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+            </svg>
+            <div>
+                <p class="font-semibold text-blue-900">Recommendations Coming Soon</p>
+                <p class="text-sm text-blue-800 mt-1">
+                    In the next milestone, this section will show personalized gear and location recommendations based on your fishing level and stats!
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

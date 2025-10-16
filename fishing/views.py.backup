@@ -4,7 +4,6 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from .hypixel_api import HypixelAPIClient, PlayerNotFoundError, RateLimitError, HypixelAPIError
 from .models import Player, ProfileSnapshot
-from .stats_calculator import FishingStatsCalculator
 import asyncio
 import logging
 
@@ -121,7 +120,7 @@ def profile_detail(request, uuid, profile_id):
             player.ign = result['ign']
             player.save()
         
-        # Save profile snapshot with advanced stats
+        # Save profile snapshot
         snapshot = ProfileSnapshot.objects.create(
             player=player,
             hypixel_profile_id=result['profile_id'],
@@ -131,8 +130,7 @@ def profile_detail(request, uuid, profile_id):
                 'fishing_xp': result['fishing_xp'],
                 'trophy_fish_count': len(result.get('trophy_fish', {})),
                 'sea_creature_kills_count': len(result.get('sea_creature_kills', {})),
-                'profile_name': result['profile_name'],
-                'advanced_stats': result.get('advanced_stats', {})
+                'profile_name': result['profile_name']
             }
         )
         
@@ -140,8 +138,7 @@ def profile_detail(request, uuid, profile_id):
         return render(request, 'partials/player_stats.html', {
             'player': player,
             'snapshot': snapshot,
-            'stats': result,
-            'advanced_stats': result.get('advanced_stats', {})
+            'stats': result
         })
     
     except Exception as e:
@@ -211,15 +208,6 @@ async def fetch_profile_detail(uuid: str, profile_id: str, api_key: str):
         # Extract detailed stats
         stats = client.extract_fishing_stats(profile, uuid)
         
-        # Calculate advanced stats
-        calculator = FishingStatsCalculator(profile, uuid)
-        advanced_stats = calculator.calculate_all_stats(
-            stats['fishing_level'],
-            stats['fishing_xp'],
-            stats['trophy_fish'],
-            stats['sea_creature_kills']
-        )
-        
         # Get IGN from Mojang API
         uuid_clean = uuid.replace('-', '')
         response = await client.client.get(f"https://sessionserver.mojang.com/session/minecraft/profile/{uuid_clean}")
@@ -240,3 +228,5 @@ async def fetch_profile_detail(uuid: str, profile_id: str, api_key: str):
     
     finally:
         await client.close()
+
+from .stats_calculator import FishingStatsCalculator

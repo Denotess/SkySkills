@@ -1,0 +1,129 @@
+<div class="bg-green-50 border-l-4 border-green-400 p-4 mb-4">
+    <div class="flex">
+        <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+        </div>
+        <div class="ml-3">
+            <h3 class="text-sm font-medium text-green-800">Profile Loaded!</h3>
+            <div class="mt-2 text-sm text-green-700">
+                <p>Viewing <strong>{{ stats.profile_name }}</strong> profile for <strong>{{ player.ign }}</strong></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Basic Stats -->
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+    <h2 class="text-2xl font-bold text-gray-900 mb-4">🎣 Fishing Overview</h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg">
+            <div class="text-sm text-blue-600 font-medium">Fishing Level</div>
+            <div class="text-3xl font-bold text-blue-700">{{ snapshot.skill_fishing_level }}</div>
+            <div class="text-xs text-blue-500 mt-1">{{ stats.fishing_xp|floatformat:0 }} XP</div>
+        </div>
+        
+        <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg">
+            <div class="text-sm text-purple-600 font-medium">Trophy Fish</div>
+            <div class="text-3xl font-bold text-purple-700">{{ advanced_stats.trophy_fish.total_caught|default:0 }}</div>
+            <div class="text-xs text-purple-500 mt-1">{{ stats.trophy_fish|length }} unique types</div>
+        </div>
+        
+        <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 rounded-lg">
+            <div class="text-sm text-yellow-600 font-medium">💎 Diamond Trophy</div>
+            <div class="text-3xl font-bold text-yellow-700">{{ advanced_stats.trophy_fish.by_tier.diamond|default:0 }}</div>
+            <div class="text-xs text-yellow-500 mt-1">Highest tier</div>
+        </div>
+        
+        <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
+            <div class="text-sm text-green-600 font-medium">Sea Creatures</div>
+            <div class="text-3xl font-bold text-green-700">{{ advanced_stats.sea_creatures.total_kills|default:0 }}</div>
+            <div class="text-xs text-green-500 mt-1">{{ advanced_stats.sea_creatures.unique_types|default:0 }} types killed</div>
+        </div>
+    </div>
+</div>
+
+<!-- Trophy Fish Breakdown -->
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+    <h2 class="text-xl font-bold text-gray-900 mb-4">🏆 Trophy Fish Breakdown</h2>
+    
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <div class="bg-orange-100 border-2 border-orange-300 p-3 rounded-lg text-center">
+            <div class="text-2xl font-bold text-orange-700">{{ advanced_stats.trophy_fish.by_tier.bronze|default:0 }}</div>
+            <div class="text-xs text-orange-600 font-medium">�� Bronze</div>
+        </div>
+        <div class="bg-gray-100 border-2 border-gray-400 p-3 rounded-lg text-center">
+            <div class="text-2xl font-bold text-gray-700">{{ advanced_stats.trophy_fish.by_tier.silver|default:0 }}</div>
+            <div class="text-xs text-gray-600 font-medium">🥈 Silver</div>
+        </div>
+        <div class="bg-yellow-100 border-2 border-yellow-400 p-3 rounded-lg text-center">
+            <div class="text-2xl font-bold text-yellow-700">{{ advanced_stats.trophy_fish.by_tier.gold|default:0 }}</div>
+            <div class="text-xs text-yellow-600 font-medium">🥇 Gold</div>
+        </div>
+        <div class="bg-blue-100 border-2 border-blue-400 p-3 rounded-lg text-center">
+            <div class="text-2xl font-bold text-blue-700">{{ advanced_stats.trophy_fish.by_tier.diamond|default:0 }}</div>
+            <div class="text-xs text-blue-600 font-medium">💎 Diamond</div>
+        </div>
+    </div>
+</div>
+
+<!-- Notable Sea Creatures -->
+{% if advanced_stats.sea_creatures.notable %}
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+    <h2 class="text-xl font-bold text-gray-900 mb-4">🦈 Notable Sea Creatures</h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {% for creature_name, kill_count in advanced_stats.sea_creatures.notable.items %}
+        <div class="bg-gray-50 border border-gray-200 p-3 rounded-lg flex justify-between items-center">
+            <span class="font-medium text-gray-700">{{ creature_name }}</span>
+            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold">{{ kill_count }} kills</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Recommendations -->
+{% if advanced_stats.recommendations %}
+<div class="bg-gradient-to-r from-indigo-50 to-purple-50 border-l-4 border-indigo-500 p-6 rounded-r-lg mb-6">
+    <h2 class="text-xl font-bold text-indigo-900 mb-4">💡 Recommendations</h2>
+    
+    <ul class="space-y-2">
+        {% for recommendation in advanced_stats.recommendations %}
+        <li class="flex items-start">
+            <svg class="w-5 h-5 text-indigo-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <span class="text-indigo-800">{{ recommendation }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<!-- Footer Info -->
+<div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+    <div class="text-xs text-gray-500 space-y-1">
+        <p><strong>Profile ID:</strong> <code class="bg-gray-200 px-2 py-0.5 rounded">{{ stats.profile_id }}</code></p>
+        <p><strong>UUID:</strong> <code class="bg-gray-200 px-2 py-0.5 rounded">{{ player.uuid }}</code></p>
+        <p><strong>Snapshot taken:</strong> {{ snapshot.created_at|date:"Y-m-d H:i:s" }} UTC</p>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="flex gap-3 justify-center">
+    <button 
+        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded transition-colors"
+        onclick="location.reload()"
+    >
+        🔍 Check Another Player
+    </button>
+    <button 
+        class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded transition-colors"
+        onclick="window.history.back()"
+    >
+        ← Back to Profiles
+    </button>
+</div>

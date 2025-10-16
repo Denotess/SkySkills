@@ -1,11 +1,17 @@
 """
-Hypixel API client with rate limiting, retries, and error handling.
+Hypixel API client for fetching Skyblock data.
+
+Handles rate limiting, retries, and error handling.
 """
 import httpx
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_exponential,
+    retry_if_exception_type
+)
+from typing import Dict, Any
 import logging
-from typing import Optional, Dict, Any
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -32,22 +38,32 @@ class HypixelAPIClient:
     Handles:
     - Rate limiting (120 req/min per Hypixel docs)
     - Retries with exponential backoff
-    - Error responses (404, 429, 5xx)
-    - Timeout handling
+    - Error handling
     """
     
     BASE_URL = "https://api.hypixel.net"
-    TIMEOUT = 10.0  # seconds
     
-    def __init__(self, api_key: Optional[str] = None):
+    # XP required for each fishing level (official Hypixel values)
+    FISHING_XP_THRESHOLDS = [
+        0, 50, 125, 200, 300, 500, 750, 1000, 1500, 2000,
+        3500, 5000, 7500, 10000, 15000, 20000, 30000, 50000,
+        75000, 100000, 200000, 300000, 400000, 500000, 600000,
+        700000, 800000, 900000, 1000000, 1100000, 1200000,
+        1300000, 1400000, 1500000, 1600000, 1700000, 1800000,
+        1900000, 2000000, 2100000, 2200000, 2300000, 2400000,
+        2500000, 2600000, 2750000, 2900000, 3100000, 3400000,
+        3700000, 4000000
+    ]
+    
+    def __init__(self, api_key: str = None):
         """
-        Initialize client.
+        Initialize API client.
         
         Args:
             api_key: Optional Hypixel API key for authenticated requests
         """
         self.api_key = api_key
-        self.client = httpx.AsyncClient(timeout=self.TIMEOUT)
+        self.client = httpx.AsyncClient(timeout=30.0)
     
     async def close(self):
         """Close HTTP client."""
@@ -56,15 +72,14 @@ class HypixelAPIClient:
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=2, max=10),
-        retry=retry_if_exception_type((httpx.TimeoutException, httpx.NetworkError)),
-        reraise=True
+        retry=retry_if_exception_type((httpx.TimeoutException, httpx.NetworkError))
     )
-    async def _get(self, endpoint: str, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def _get(self, endpoint: str, params: Dict[str, str] = None) -> Dict[str, Any]:
         """
-        Make GET request with retries.
+        Make GET request to Hypixel API with retry logic.
         
         Args:
-            endpoint: API endpoint (e.g., "/player")
+            endpoint: API endpoint (e.g., "/skyblock/profiles")
             params: Query parameters
         
         Returns:
@@ -75,6 +90,9 @@ class HypixelAPIClient:
             RateLimitError: Rate limit exceeded (429)
             HypixelAPIError: Other API errors
         """
+        if params is None:
+            params = {}
+        
         if self.api_key:
             params['key'] = self.api_key
         
@@ -158,7 +176,7 @@ class HypixelAPIClient:
             HypixelAPIError: API request failed
         """
         uuid_clean = uuid.replace('-', '')
-        data = await self._get("/skyblock/profiles", {"uuid": uuid_clean})
+        data = await self._get("/v2/skyblock/profiles", {"uuid": uuid_clean})
         
         if not data.get('profiles'):
             raise PlayerNotFoundError("Player has no Skyblock profiles")
@@ -176,95 +194,80 @@ class HypixelAPIClient:
             Player data dict
         """
         uuid_clean = uuid.replace('-', '')
-        data = await self._get("/player", {"uuid": uuid_clean})
-        return data
+        return await self._get("/player", {"uuid": uuid_clean})
     
     def extract_fishing_stats(self, profile: Dict[str, Any], uuid: str) -> Dict[str, Any]:
         """
-        Extract fishing-relevant stats from a Skyblock profile.
+        Extract fishing-related stats from a Skyblock profile.
         
         Args:
-            profile: Skyblock profile dict
-            uuid: Player UUID (to find correct member data)
+            profile: Skyblock profile dict from API
+            uuid: Player UUID (with hyphens)
         
         Returns:
-            Dict with fishing stats
+            Dict with fishing stats including:
+                - fishing_level: int
+                - fishing_xp: float
+                - trophy_fish: dict
+                - sea_creature_kills: dict
+                - profile_id: str
+                - cute_name: str
         """
         uuid_clean = uuid.replace('-', '')
         member = profile.get('members', {}).get(uuid_clean, {})
         
-        # Fishing skill XP - try multiple paths (Hypixel API structure varies)
         fishing_xp = 0
         
-        # Path 1: leveling.experience (most common in newer profiles)
-        if 'leveling' in member and 'experience' in member['leveling']:
-            fishing_xp = member['leveling']['experience'].get('SKILL_FISHING', 0)
+        # Path 1: player_data.experience.SKILL_FISHING (v2 API - most reliable)
+        if 'player_data' in member and 'experience' in member['player_data']:
+            experience = member['player_data']['experience']
+            if isinstance(experience, dict):
+                fishing_xp = experience.get('SKILL_FISHING', 0)
         
-        # Path 2: player_data.experience (older format)
-        if not fishing_xp and 'player_data' in member and 'experience' in member['player_data']:
-            fishing_xp = member['player_data']['experience'].get('SKILL_FISHING', 0)
+        # Path 2: leveling.experience (backup for v2 API)
+        elif 'leveling' in member and 'experience' in member['leveling']:
+            experience = member['leveling']['experience']
+            if isinstance(experience, dict):
+                fishing_xp = experience.get('SKILL_FISHING', 0)
         
-        # Path 3: direct experience_skill_fishing key
-        if not fishing_xp:
-            fishing_xp = member.get('experience_skill_fishing', 0)
+        # Path 3: experience_skill_fishing (older profiles)
+        elif 'experience_skill_fishing' in member:
+            fishing_xp = member['experience_skill_fishing']
         
-        # Calculate level from XP
+        # Convert XP to level
         fishing_level = self._xp_to_level(fishing_xp)
         
-        # Trophy fish
+        # Extract trophy fish
         trophy_fish = member.get('trophy_fish', {})
         
-        # Bestiary (sea creatures)
-        bestiary = member.get('bestiary', {}).get('kills', {})
-        sea_creature_kills = {
-            k: v for k, v in bestiary.items()
-            if 'sea' in k.lower() or 'shark' in k.lower() or 'squid' in k.lower()
-        }
-        
-        # Equipment
-        equipment = member.get('inventory', {}).get('equipment_contents', {}).get('data', [])
-        
-        # Wardrobe
-        wardrobe = member.get('inventory', {}).get('wardrobe_contents', {}).get('data', [])
+        # Extract sea creature kills from bestiary
+        bestiary = member.get('bestiary', {})
+        sea_creature_kills = bestiary.get('kills', {})
         
         return {
             'fishing_level': fishing_level,
             'fishing_xp': fishing_xp,
             'trophy_fish': trophy_fish,
             'sea_creature_kills': sea_creature_kills,
-            'equipment': equipment,
-            'wardrobe': wardrobe,
             'profile_id': profile.get('profile_id'),
-            'cute_name': profile.get('cute_name'),
-            'last_save': profile.get('members', {}).get(uuid_clean, {}).get('last_save', 0)
+            'cute_name': profile.get('cute_name')
         }
-
-    @staticmethod
-    def _xp_to_level(xp: float) -> int:
+    
+    def _xp_to_level(self, xp: float) -> int:
         """
-        Convert fishing XP to level (simplified).
-        Real formula uses cumulative XP thresholds.
+        Convert fishing XP to fishing level using official thresholds.
+        
+        Args:
+            xp: Total fishing XP
+        
+        Returns:
+            Fishing level (0-50)
         """
-        # Simplified: 1M XP ≈ Level 50
-        if xp >= 55172425:  # Level 50
-            return 50
-        elif xp >= 27652625:  # Level 45
-            return 45
-        elif xp >= 13512625:  # Level 40
-            return 40
-        elif xp >= 6452625:   # Level 35
-            return 35
-        elif xp >= 2982625:   # Level 30
-            return 30
-        elif xp >= 1332625:   # Level 25
-            return 25
-        elif xp >= 572625:    # Level 20
-            return 20
-        elif xp >= 232625:    # Level 15
-            return 15
-        elif xp >= 87625:     # Level 10
-            return 10
-        elif xp >= 27625:     # Level 5
-            return 5
-        else:
-            return int(xp / 5000)  # Rough approximation
+        cumulative_xp = 0
+        
+        for level, required_xp in enumerate(self.FISHING_XP_THRESHOLDS):
+            cumulative_xp += required_xp
+            if xp < cumulative_xp:
+                return level
+        
+        return 50  # Max level
